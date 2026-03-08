@@ -73,6 +73,21 @@ namespace SimpleApiCrud.Controllers
 
         }
 
+        
+    
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
         [HttpPost("UploadImage")]
         public async Task<IActionResult> UploadImage([FromForm] IFormFile image)
         {
@@ -95,19 +110,6 @@ namespace SimpleApiCrud.Controllers
 
             var imageUrl = $"{Request.Scheme}://{Request.Host}/images/{image.FileName}";
             return Ok(new { ImageUrl = imageUrl });
-        }
-    
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id)
-        {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-            return NoContent();
         }
 
         [HttpPatch("{id}/update-stock")]
