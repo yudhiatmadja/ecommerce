@@ -43,12 +43,13 @@ namespace SimpleApiCrud.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto, Product updatedProduct)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto)
         {
-            if (id != updatedProduct.Id)
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+            if (product == null)
             {
-                return BadRequest();
+                return NotFound();
             }
             if (dto.Price <= 0)
             {
@@ -59,18 +60,27 @@ namespace SimpleApiCrud.Controllers
                 return BadRequest("Stock must be a non-negative integer");
             }
 
+            product.Name = dto.Name;
+            product.Price = dto.Price ?? product.Price;
+            product.Stock = dto.Stock ?? product.Stock;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        
+    
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
             }
-
-            product.Name = dto.Name;
-            product.Price = dto.Price ?? product.Price;
-            product.Stock = dto.Stock ?? product.Stock;
+            _context.Products.Remove(product);
             await _context.SaveChangesAsync();
             return NoContent();
-
         }
 
         [HttpPost("UploadImage")]
@@ -96,16 +106,22 @@ namespace SimpleApiCrud.Controllers
             var imageUrl = $"{Request.Scheme}://{Request.Host}/images/{image.FileName}";
             return Ok(new { ImageUrl = imageUrl });
         }
-    
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id)
+
+        [HttpPatch("{id}/update-stock")]
+        public async Task<IActionResult> UpdateStock(int id, UpdateStockDto dto)
         {
+            if (dto.Stock < 0)
+            {
+                return BadRequest("Stock must be a non-negative integer");
+            }
+
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
             }
-            _context.Products.Remove(product);
+
+            product.Stock = dto.Stock;
             await _context.SaveChangesAsync();
             return NoContent();
         }
