@@ -43,12 +43,13 @@ namespace SimpleApiCrud.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto, Product updatedProduct)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto)
         {
-            if (id != updatedProduct.Id)
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+            if (product == null)
             {
-                return BadRequest();
+                return NotFound();
             }
             if (dto.Price <= 0)
             {
@@ -59,18 +60,12 @@ namespace SimpleApiCrud.Controllers
                 return BadRequest("Stock must be a non-negative integer");
             }
 
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
             product.Name = dto.Name;
             product.Price = dto.Price ?? product.Price;
             product.Stock = dto.Stock ?? product.Stock;
+
             await _context.SaveChangesAsync();
             return NoContent();
-
         }
 
         
