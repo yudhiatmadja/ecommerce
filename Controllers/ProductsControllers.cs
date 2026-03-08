@@ -109,5 +109,24 @@ namespace SimpleApiCrud.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpPatch("{id}/update-stock")]
+        public async Task<IActionResult> UpdateStock(int id, UpdateStockDto dto)
+        {
+            if (dto.Stock < 0)
+            {
+                return BadRequest("Stock must be a non-negative integer");
+            }
+
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.Stock = dto.Stock;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }
